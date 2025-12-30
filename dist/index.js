@@ -471,7 +471,7 @@ All commands have completed and output files are ready to read.`,
     };
 });
 // Determine which agents are enabled based on PAR5_DISABLE_* env vars
-const ALL_AGENTS = ["claude", "gemini", "codex"];
+const ALL_AGENTS = ["claude", "gemini", "codex", "opencode"];
 const ENABLED_AGENTS = ALL_AGENTS.filter((agent) => {
     const disableVar = `PAR5_DISABLE_${agent.toUpperCase()}`;
     return !process.env[disableVar];
@@ -482,6 +482,7 @@ if (ENABLED_AGENTS.length > 0) {
         claude: "claude: Claude Code CLI (uses --dangerously-skip-permissions for autonomous operation)",
         gemini: "gemini: Google Gemini CLI (uses --yolo for auto-accept)",
         codex: "codex: OpenAI Codex CLI (uses --dangerously-bypass-approvals-and-sandbox for autonomous operation)",
+        opencode: "opencode: OpenCode CLI (uses run command for non-interactive autonomous operation)",
     };
     const availableAgentsDoc = ENABLED_AGENTS.map((a) => `- ${agentDescriptions[a]}`).join("\n");
     server.registerTool("run_agent_across_list", {
@@ -561,6 +562,11 @@ VARIABLE SUBSTITUTION:
                     const codexArgs = process.env.PAR5_CODEX_ARGS || "";
                     return `codex exec --dangerously-bypass-approvals-and-sandbox ${agentArgs} ${codexArgs} '${escapedPrompt}'`;
                 }
+                case "opencode": {
+                    // OpenCode CLI run command for non-interactive autonomous operation
+                    const opencodeArgs = process.env.PAR5_OPENCODE_ARGS || "";
+                    return `opencode run ${agentArgs} ${opencodeArgs} '${escapedPrompt}'`;
+                }
                 default:
                     throw new Error(`Unknown agent: ${agentName}`);
             }
@@ -593,6 +599,7 @@ VARIABLE SUBSTITUTION:
             claude: "Claude Code",
             gemini: "Google Gemini",
             codex: "OpenAI Codex",
+            opencode: "OpenCode",
         };
         const numBatches = Math.ceil(items.length / BATCH_SIZE);
         return {
