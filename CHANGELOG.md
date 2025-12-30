@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/jrandolf/par5-mcp/compare/v0.1.2...v0.2.0) (2025-12-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* only return text
+
+### Bug Fixes
+
+* only return text ([0b73afd](https://github.com/jrandolf/par5-mcp/commit/0b73afdadcb71c583ea87958ef89e920d7517d8e))
+
 ## [0.1.2](https://github.com/jrandolf/par5-mcp/compare/v0.1.1...v0.1.2) (2025-12-30)
 
 
