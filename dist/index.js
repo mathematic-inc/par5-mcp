@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import generatePassphrase from "eff-diceware-passphrase";
 import { z } from "zod";
 // Helper to create a safe filename from an item string
 function toSafeFilename(item) {
@@ -71,6 +72,17 @@ async function runInBatches(tasks) {
 const outputDir = join(tmpdir(), "par5-mcp-results");
 // Store for lists
 const lists = new Map();
+// Generate a unique diceware list ID (3 words joined with hyphens)
+function generateListId() {
+    const words = generatePassphrase(3);
+    let id = words.join("-");
+    // Ensure uniqueness by appending more words if needed
+    while (lists.has(id)) {
+        const extraWord = generatePassphrase(1)[0];
+        id = `${id}-${extraWord}`;
+    }
+    return id;
+}
 // Create the MCP server
 const server = new McpServer({
     name: "par5-mcp",
@@ -96,7 +108,7 @@ EXAMPLE: To process files ["src/a.ts", "src/b.ts", "src/c.ts"], first create a l
             .describe("Array of items to store in the list. Each item can be a file path, URL, identifier, or any string that will be substituted into commands or prompts."),
     },
 }, async ({ items }) => {
-    const id = randomUUID();
+    const id = generateListId();
     lists.set(id, items);
     return {
         content: [
@@ -106,6 +118,97 @@ EXAMPLE: To process files ["src/a.ts", "src/b.ts", "src/c.ts"], first create a l
             },
         ],
     };
+});
+// Tool: create_list_from_shell
+server.registerTool("create_list_from_shell", {
+    description: `Creates a list by running a shell command and parsing its newline-delimited output.
+
+WHEN TO USE:
+- When you need to create a list from command output (e.g., find, ls, grep, git ls-files)
+- When the list of items to process is determined by a shell command
+- As an alternative to manually specifying items in create_list
+
+EXAMPLES:
+- "find src -name '*.ts'" to get all TypeScript files
+- "git ls-files '*.tsx'" to get all tracked TSX files
+- "ls *.json" to get all JSON files in current directory
+- "grep -l 'TODO' src/**/*.ts" to get files containing TODO
+
+WORKFLOW:
+1. Call create_list_from_shell with your command
+2. The command's stdout is split by newlines to create list items
+3. Empty lines are filtered out
+4. Use the returned list_id with run_shell_across_list or run_agent_across_list`,
+    inputSchema: {
+        command: z
+            .string()
+            .describe("Shell command to run. Its stdout will be split by newlines to create list items. Example: 'find src -name \"*.ts\"' or 'git ls-files'"),
+    },
+}, async ({ command }) => {
+    return new Promise((resolve) => {
+        const child = spawn("sh", ["-c", command], {
+            stdio: ["ignore", "pipe", "pipe"],
+        });
+        let stdout = "";
+        let stderr = "";
+        child.stdout.on("data", (data) => {
+            stdout += data.toString();
+        });
+        child.stderr.on("data", (data) => {
+            stderr += data.toString();
+        });
+        child.on("close", (code) => {
+            if (code !== 0 && stderr) {
+                resolve({
+                    content: [
+                        {
+                            type: "text",
+                            text: `Error: Command exited with code ${code}.\n\nstderr:\n${stderr}`,
+                        },
+                    ],
+                    isError: true,
+                });
+                return;
+            }
+            // Split by newlines and filter out empty lines
+            const items = stdout
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+            if (items.length === 0) {
+                resolve({
+                    content: [
+                        {
+                            type: "text",
+                            text: `Warning: Command produced no output. No list was created.${stderr ? `\n\nstderr:\n${stderr}` : ""}`,
+                        },
+                    ],
+                });
+                return;
+            }
+            const id = generateListId();
+            lists.set(id, items);
+            resolve({
+                content: [
+                    {
+                        type: "text",
+                        text: `Successfully created a list with ${items.length} items from command output. The list ID is "${id}". You can now use this ID with run_shell_across_list or run_agent_across_list to process each item in parallel.${stderr ? `\n\nNote: Command produced stderr output:\n${stderr}` : ""}`,
+                    },
+                ],
+            });
+        });
+        child.on("error", (err) => {
+            resolve({
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: Failed to execute command: ${err.message}`,
+                    },
+                ],
+                isError: true,
+            });
+        });
+    });
 });
 // Tool: get_list
 server.registerTool("get_list", {
