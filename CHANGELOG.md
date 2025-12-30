@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/jrandolf/par5-mcp/compare/v0.2.0...v0.2.1) (2025-12-30)
+
+
+### Features
+
+* add OpenCode agent support with CLI integration ([fadf84d](https://github.com/jrandolf/par5-mcp/commit/fadf84d4731ff4c416175f7ddb1ae9b572b55d13))
+
 ## [0.2.0](https://github.com/jrandolf/par5-mcp/compare/v0.1.2...v0.2.0) (2025-12-30)
 
 
