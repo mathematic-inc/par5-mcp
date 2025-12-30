@@ -699,12 +699,12 @@ VARIABLE SUBSTITUTION:
 					case "claude": {
 						// Claude Code CLI with --dangerously-skip-permissions and streaming output
 						const claudeArgs = process.env.PAR5_CLAUDE_ARGS || "";
-						return `claude --dangerously-skip-permissions --output-format stream-json --verbose ${agentArgs} ${claudeArgs} -p '${escapedPrompt}'`;
+						return `claude --dangerously-skip-permissions --output-format text --verbose ${agentArgs} ${claudeArgs} -p '${escapedPrompt}'`;
 					}
 					case "gemini": {
 						// Gemini CLI with yolo mode and streaming JSON output
 						const geminiArgs = process.env.PAR5_GEMINI_ARGS || "";
-						return `gemini --yolo --output-format stream-json ${agentArgs} ${geminiArgs} '${escapedPrompt}'`;
+						return `gemini --yolo --output-format text ${agentArgs} ${geminiArgs} '${escapedPrompt}'`;
 					}
 					case "codex": {
 						// Codex CLI exec subcommand with full-auto flag and JSON streaming output
