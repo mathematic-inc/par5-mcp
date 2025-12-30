@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/jrandolf/par5-mcp/compare/v0.1.1...v0.1.2) (2025-12-30)
+
+
+### Features
+
+* add process cleanup on shutdown to manage active child processes ([68cbbbe](https://github.com/jrandolf/par5-mcp/commit/68cbbbec5188d9caba55bf17f8aa6a022e70cc17))
+
 ## [0.1.1](https://github.com/jrandolf/par5-mcp/compare/v0.1.0...v0.1.1) (2025-12-30)
 
 
