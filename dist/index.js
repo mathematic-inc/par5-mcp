@@ -8,6 +8,29 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import generatePassphrase from "eff-diceware-passphrase";
 import { z } from "zod";
+// Track all active child processes for cleanup on shutdown
+const activeProcesses = new Set();
+// Cleanup function to kill all active child processes
+function cleanupProcesses() {
+    for (const child of activeProcesses) {
+        if (!child.killed) {
+            child.kill("SIGTERM");
+        }
+    }
+    activeProcesses.clear();
+}
+// Register shutdown handlers
+process.on("SIGTERM", () => {
+    cleanupProcesses();
+    process.exit(0);
+});
+process.on("SIGINT", () => {
+    cleanupProcesses();
+    process.exit(0);
+});
+process.on("exit", () => {
+    cleanupProcesses();
+});
 // Helper to create a safe filename from an item string
 function toSafeFilename(item) {
     // Get basename if it's a path
@@ -29,6 +52,8 @@ function runCommandToFiles(command, stdoutFile, stderrFile, options = {}) {
             const child = spawn("sh", ["-c", command], {
                 stdio: ["ignore", "pipe", "pipe"],
             });
+            // Track the child process for cleanup on shutdown
+            activeProcesses.add(child);
             let timeoutId;
             if (options.timeout) {
                 timeoutId = setTimeout(() => {
@@ -38,6 +63,7 @@ function runCommandToFiles(command, stdoutFile, stderrFile, options = {}) {
             child.stdout.pipe(stdoutStream);
             child.stderr.pipe(stderrStream);
             child.on("close", async () => {
+                activeProcesses.delete(child);
                 if (timeoutId)
                     clearTimeout(timeoutId);
                 stdoutStream.end();
@@ -47,6 +73,7 @@ function runCommandToFiles(command, stdoutFile, stderrFile, options = {}) {
                 resolve();
             });
             child.on("error", async (err) => {
+                activeProcesses.delete(child);
                 if (timeoutId)
                     clearTimeout(timeoutId);
                 stderrStream.write(`\nERROR: ${err.message}\n`);
@@ -149,6 +176,8 @@ WORKFLOW:
         const child = spawn("sh", ["-c", command], {
             stdio: ["ignore", "pipe", "pipe"],
         });
+        // Track the child process for cleanup on shutdown
+        activeProcesses.add(child);
         let stdout = "";
         let stderr = "";
         child.stdout.on("data", (data) => {
@@ -158,6 +187,7 @@ WORKFLOW:
             stderr += data.toString();
         });
         child.on("close", (code) => {
+            activeProcesses.delete(child);
             if (code !== 0 && stderr) {
                 resolve({
                     content: [
@@ -198,6 +228,7 @@ WORKFLOW:
             });
         });
         child.on("error", (err) => {
+            activeProcesses.delete(child);
             resolve({
                 content: [
                     {

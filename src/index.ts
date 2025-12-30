@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, open } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -9,6 +9,34 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import generatePassphrase from "eff-diceware-passphrase";
 import { z } from "zod";
+
+// Track all active child processes for cleanup on shutdown
+const activeProcesses = new Set<ChildProcess>();
+
+// Cleanup function to kill all active child processes
+function cleanupProcesses() {
+	for (const child of activeProcesses) {
+		if (!child.killed) {
+			child.kill("SIGTERM");
+		}
+	}
+	activeProcesses.clear();
+}
+
+// Register shutdown handlers
+process.on("SIGTERM", () => {
+	cleanupProcesses();
+	process.exit(0);
+});
+
+process.on("SIGINT", () => {
+	cleanupProcesses();
+	process.exit(0);
+});
+
+process.on("exit", () => {
+	cleanupProcesses();
+});
 
 // Helper to create a safe filename from an item string
 function toSafeFilename(item: string): string {
@@ -45,6 +73,9 @@ function runCommandToFiles(
 				stdio: ["ignore", "pipe", "pipe"],
 			});
 
+			// Track the child process for cleanup on shutdown
+			activeProcesses.add(child);
+
 			let timeoutId: NodeJS.Timeout | undefined;
 			if (options.timeout) {
 				timeoutId = setTimeout(() => {
@@ -56,6 +87,7 @@ function runCommandToFiles(
 			child.stderr.pipe(stderrStream);
 
 			child.on("close", async () => {
+				activeProcesses.delete(child);
 				if (timeoutId) clearTimeout(timeoutId);
 				stdoutStream.end();
 				stderrStream.end();
@@ -65,6 +97,7 @@ function runCommandToFiles(
 			});
 
 			child.on("error", async (err) => {
+				activeProcesses.delete(child);
 				if (timeoutId) clearTimeout(timeoutId);
 				stderrStream.write(`\nERROR: ${err.message}\n`);
 				stdoutStream.end();
@@ -198,6 +231,9 @@ WORKFLOW:
 				stdio: ["ignore", "pipe", "pipe"],
 			});
 
+			// Track the child process for cleanup on shutdown
+			activeProcesses.add(child);
+
 			let stdout = "";
 			let stderr = "";
 
@@ -210,6 +246,7 @@ WORKFLOW:
 			});
 
 			child.on("close", (code) => {
+				activeProcesses.delete(child);
 				if (code !== 0 && stderr) {
 					resolve({
 						content: [
@@ -255,6 +292,7 @@ WORKFLOW:
 			});
 
 			child.on("error", (err) => {
+				activeProcesses.delete(child);
 				resolve({
 					content: [
 						{
