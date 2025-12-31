@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/jrandolf/par5-mcp/compare/v0.2.1...v0.2.2) (2025-12-31)
+
+
+### Bug Fixes
+
+* remove timeout ([c26768f](https://github.com/jrandolf/par5-mcp/commit/c26768ff06be59e44c08e499b74e62dbca49b467))
+
 ## [0.2.1](https://github.com/jrandolf/par5-mcp/compare/v0.2.0...v0.2.1) (2025-12-30)
 
 
