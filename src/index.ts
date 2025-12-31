@@ -60,7 +60,6 @@ function runCommandToFiles(
 	command: string,
 	stdoutFile: string,
 	stderrFile: string,
-	options: { timeout?: number } = {},
 ): Promise<void> {
 	return new Promise((resolve) => {
 		(async () => {
@@ -76,19 +75,11 @@ function runCommandToFiles(
 			// Track the child process for cleanup on shutdown
 			activeProcesses.add(child);
 
-			let timeoutId: NodeJS.Timeout | undefined;
-			if (options.timeout) {
-				timeoutId = setTimeout(() => {
-					child.kill("SIGTERM");
-				}, options.timeout);
-			}
-
 			child.stdout.pipe(stdoutStream);
 			child.stderr.pipe(stderrStream);
 
 			child.on("close", async () => {
 				activeProcesses.delete(child);
-				if (timeoutId) clearTimeout(timeoutId);
 				stdoutStream.end();
 				stderrStream.end();
 				await stdoutHandle.close();
@@ -98,7 +89,6 @@ function runCommandToFiles(
 
 			child.on("error", async (err) => {
 				activeProcesses.delete(child);
-				if (timeoutId) clearTimeout(timeoutId);
 				stderrStream.write(`\nERROR: ${err.message}\n`);
 				stdoutStream.end();
 				stderrStream.end();
@@ -116,16 +106,13 @@ async function runInBatches(
 		command: string;
 		stdoutFile: string;
 		stderrFile: string;
-		timeout?: number;
 	}>,
 ): Promise<void> {
 	for (let i = 0; i < tasks.length; i += BATCH_SIZE) {
 		const batch = tasks.slice(i, i + BATCH_SIZE);
 		await Promise.all(
 			batch.map((task) =>
-				runCommandToFiles(task.command, task.stdoutFile, task.stderrFile, {
-					timeout: task.timeout,
-				}),
+				runCommandToFiles(task.command, task.stdoutFile, task.stderrFile),
 			),
 		);
 	}
@@ -631,9 +618,8 @@ ${availableAgentsDoc}
 HOW IT WORKS:
 1. Each item in the list is substituted into the prompt where {{item}} appears
 2. Agents run in batches of ${BATCH_SIZE} at a time to avoid overwhelming the system
-3. Each agent has a 5-minute timeout
-4. Output streams directly to files as the agents work
-5. This tool waits for all agents to complete before returning
+3. Output streams directly to files as the agents work
+4. This tool waits for all agents to complete before returning
 
 AFTER COMPLETION:
 - Read the stdout files to check the results from each agent
@@ -685,7 +671,6 @@ VARIABLE SUBSTITUTION:
 				command: string;
 				stdoutFile: string;
 				stderrFile: string;
-				timeout: number;
 			}> = [];
 
 			// Build the agent command with skip permission flags and streaming output
@@ -736,7 +721,6 @@ VARIABLE SUBSTITUTION:
 					command: getAgentCommand(agent, expandedPrompt),
 					stdoutFile,
 					stderrFile,
-					timeout: 300000, // 5 minute timeout per item
 				});
 
 				results.push({
@@ -778,7 +762,7 @@ NEXT STEPS:
 1. Read the stdout files to check the results from each agent
 2. If there are errors, check the corresponding stderr files for details
 
-All agents have completed (with a 5-minute timeout per agent) and output files are ready to read.`,
+All agents have completed and output files are ready to read.`,
 					},
 				],
 			};
