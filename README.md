@@ -244,7 +244,7 @@ File names are derived from the item value (sanitized for filesystem safety).
 ### Building from Source
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/mathematic-inc/par5-mcp.git
 cd par5-mcp
 npm install
 npm run build
@@ -266,4 +266,6 @@ npm start
 
 ## License
 
-ISC
+Apache-2.0
+
+> This project is free and open-source work by a 501(c)(3) non-profit. If you find it useful, please consider [donating](https://github.com/sponsors/mathematic-inc).
