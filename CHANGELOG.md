@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.4](https://github.com/mathematic-inc/par5-mcp/compare/v0.2.3...v0.2.4) (2026-03-11)
+
+
+### Bug Fixes
+
+* Make release notes job non-blocking ([#12](https://github.com/mathematic-inc/par5-mcp/issues/12)) ([36bfb9d](https://github.com/mathematic-inc/par5-mcp/commit/36bfb9d2bb8c6ef3f418ce2eeea1196fc740d0a2))
+* Restore id-token permission for release notes workflow ([#11](https://github.com/mathematic-inc/par5-mcp/issues/11)) ([2fdb6fe](https://github.com/mathematic-inc/par5-mcp/commit/2fdb6feaf4634bfbd32a3570c1321824177d9b98))
+* Use ANTHROPIC_API_KEY for release notes workflow ([#9](https://github.com/mathematic-inc/par5-mcp/issues/9)) ([4efbebb](https://github.com/mathematic-inc/par5-mcp/commit/4efbebbb549d0cf616615e06b878e0d67f5e9030))
+
 ## [0.2.3](https://github.com/mathematic-inc/par5-mcp/compare/v0.2.2...v0.2.3) (2026-03-11)
 
 
