@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/mathematic-inc/par5-mcp/compare/v0.2.2...v0.2.3) (2026-03-11)
+
+
+### Bug Fixes
+
+* Transfer repository to mathematic-inc org ([#7](https://github.com/mathematic-inc/par5-mcp/issues/7)) ([fea2c99](https://github.com/mathematic-inc/par5-mcp/commit/fea2c99264f5feafa9ede8f52118be50106ff8bf))
+
 ## [0.2.2](https://github.com/mathematic-inc/par5-mcp/compare/v0.2.1...v0.2.2) (2025-12-31)
 
 ### Bug Fixes

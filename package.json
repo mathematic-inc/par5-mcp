@@ -1,6 +1,6 @@
 {
   "name": "par5-mcp",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "MCP server for parallel list operations - run shell commands and AI agents across lists in parallel",
   "main": "dist/index.js",
   "packageManager": "pnpm@10.31.0+sha512.e3927388bfaa8078ceb79b748ffc1e8274e84d75163e67bc22e06c0d3aed43dd153151cbf11d7f8301ff4acb98c68bdc5cadf6989532801ffafe3b3e4a63c268",
