@@ -639,6 +639,12 @@ VARIABLE SUBSTITUTION:
           .describe(
             `Which AI agent to use: ${ENABLED_AGENTS.map((a) => `'${a}'`).join(", ")}. All agents run with permission-skipping flags for autonomous operation.`
           ),
+        model: z
+          .string()
+          .optional()
+          .describe(
+            "Optional model to use. Passed as --model to the agent CLI. Examples: 'claude-opus-4-6', 'claude-sonnet-4-6' for Claude; 'gemini-2.5-pro' for Gemini; 'o3' for Codex."
+          ),
         prompt: z
           .string()
           .describe(
@@ -646,7 +652,7 @@ VARIABLE SUBSTITUTION:
           ),
       },
     },
-    async ({ list_id, agent, prompt }) => {
+    async ({ list_id, agent, model, prompt }) => {
       const items = lists.get(list_id);
       if (!items) {
         return {
@@ -680,27 +686,28 @@ VARIABLE SUBSTITUTION:
       ): string => {
         const escapedPrompt = expandedPrompt.replace(/'/g, "'\\''");
         const agentArgs = process.env.PAR5_AGENT_ARGS || "";
+        const modelFlag = model ? `--model '${model}'` : "";
 
         switch (agentName) {
           case "claude": {
             // Claude Code CLI with --dangerously-skip-permissions and streaming output
             const claudeArgs = process.env.PAR5_CLAUDE_ARGS || "";
-            return `claude --dangerously-skip-permissions --output-format text --verbose ${agentArgs} ${claudeArgs} -p '${escapedPrompt}'`;
+            return `claude --dangerously-skip-permissions --output-format text --verbose ${modelFlag} ${agentArgs} ${claudeArgs} -p '${escapedPrompt}'`;
           }
           case "gemini": {
             // Gemini CLI with yolo mode and streaming JSON output
             const geminiArgs = process.env.PAR5_GEMINI_ARGS || "";
-            return `gemini --yolo --output-format text ${agentArgs} ${geminiArgs} '${escapedPrompt}'`;
+            return `gemini --yolo --output-format text ${modelFlag} ${agentArgs} ${geminiArgs} '${escapedPrompt}'`;
           }
           case "codex": {
             // Codex CLI exec subcommand with full-auto flag and JSON streaming output
             const codexArgs = process.env.PAR5_CODEX_ARGS || "";
-            return `codex exec --dangerously-bypass-approvals-and-sandbox ${agentArgs} ${codexArgs} '${escapedPrompt}'`;
+            return `codex exec --dangerously-bypass-approvals-and-sandbox ${modelFlag} ${agentArgs} ${codexArgs} '${escapedPrompt}'`;
           }
           case "opencode": {
             // OpenCode CLI run command for non-interactive autonomous operation
             const opencodeArgs = process.env.PAR5_OPENCODE_ARGS || "";
-            return `opencode run ${agentArgs} ${opencodeArgs} '${escapedPrompt}'`;
+            return `opencode run ${modelFlag} ${agentArgs} ${opencodeArgs} '${escapedPrompt}'`;
           }
           default:
             throw new Error(`Unknown agent: ${agentName}`);
