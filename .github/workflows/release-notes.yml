@@ -16,6 +16,7 @@ jobs:
   enhance:
     name: Enhance release notes with Claude
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       contents: write
       id-token: write
