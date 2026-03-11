@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/mathematic-inc/par5-mcp/compare/v0.2.4...v0.2.5) (2026-03-11)
+
+
+### Features
+
+* Add model selection to run_agent_across_list ([#14](https://github.com/mathematic-inc/par5-mcp/issues/14)) ([4360829](https://github.com/mathematic-inc/par5-mcp/commit/4360829f56843c939071389d65b514dee2ad0b16))
+
 ## [0.2.4](https://github.com/mathematic-inc/par5-mcp/compare/v0.2.3...v0.2.4) (2026-03-11)
 
 
